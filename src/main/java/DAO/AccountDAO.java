@@ -58,4 +58,30 @@ public class AccountDAO {
             
         return null;
     }
+
+    // Used by postMessage in MessageDAO
+    public Account getAccountByID(int account_id) {
+        Connection connection = ConnectionUtil.getConnection();
+
+        try {
+            String sql = "SELECT * FROM Account WHERE (account_id = ?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setInt(1, account_id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if(resultSet.next()) {
+                int result_account_id = (int) resultSet.getLong(1);
+                String result_account_username = resultSet.getString(2);
+                String result_account_password = resultSet.getString(3);
+
+                return new Account(result_account_id, result_account_username, result_account_password);
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return null;
+    }
 }

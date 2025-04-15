@@ -14,16 +14,17 @@ import java.util.List;
 
 /*
 Remaining Requirements:
-3: Our API should be able to process the creation of new messages.
 6: Our API should be able to delete a message identified by a message ID.
 7: Our API should be able to update a message text identified by a message ID.
-8: Our API should be able to retrieve all messages written by a particular user.
+
 
 Completed Requirements:
 1: Our API should be able to process new User registrations
 2: Our API should be able to process User logins.
+3: Our API should be able to process the creation of new messages.
 4: Our API should be able to retrieve all messages.
 5: Our API should be able to retrieve a message by its ID.
+8: Our API should be able to retrieve all messages written by a particular user.
  */
 public class SocialMediaController {
     AccountService accountService;
@@ -45,11 +46,15 @@ public class SocialMediaController {
         // 1: Our API should be able to process new User registrations:
         app.post("/register", this::postRegistrationHandler);
         // 2: Our API should be able to process User logins:
-        app.post("/login", this::postLoginHandler);       
+        app.post("/login", this::postLoginHandler);
+        // 3: Our API should be able to process the creation of new messages.
+        app.post("/messages", this::postMessageHandler);
         // 4: Our API should be able to retrieve all messages:  
         app.get("/messages", this::getAllMessagesHandler);
         // 5: Our API should be able to retrieve a message by its ID:
         app.get("/messages/{message_id}", this::getMessageByIDHandler);
+        // 8: Our API should be able to retrieve all messages written by a particular user.
+        app.get("/accounts/{account_id}/messages", this::getMessagesByAccountIDHandler);
 
 
         // app.start(8080); Server is already started in tests
@@ -84,6 +89,19 @@ public class SocialMediaController {
 
     }
 
+    // 3: Our API should be able to process the creation of new messages.
+    private void postMessageHandler(Context ctx) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        Message inputMessage = mapper.readValue(ctx.body(), Message.class);
+
+        Message postedMessage = messageService.postMessage(inputMessage);
+
+        if (postedMessage != null)
+            ctx.json(mapper.writeValueAsString(postedMessage));
+        else
+            ctx.status(400);
+    }
+
     // 4: Our API should be able to retrieve all messages.
     private void getAllMessagesHandler(Context ctx) {
         List<Message> messages = messageService.getAllMessages();
@@ -99,6 +117,20 @@ public class SocialMediaController {
         Message message = messageService.getMessageByID(message_id);
         if (message != null)
             ctx.json(message);
+        else
+            ctx.result();
+    }
+
+
+    // 8: Our API should be able to retrieve all messages written by a particular user.
+    private void getMessagesByAccountIDHandler (Context ctx) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        int account_id = mapper.readValue(ctx.pathParam("account_id"), int.class);
+
+        List<Message> output = messageService.getMessagesByAccountID(account_id);
+
+        if (output != null)
+            ctx.json(output);
         else
             ctx.result();
     }

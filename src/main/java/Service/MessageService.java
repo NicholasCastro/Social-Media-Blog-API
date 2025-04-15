@@ -18,11 +18,19 @@ public class MessageService {
         this.messageDAO = messageDAO;
     }
 
+    public Message postMessage(Message message) {
+        return messageDAO.postMessage(message);
+    }
+
     public List<Message> getAllMessages() {
         return messageDAO.getAllMessages();
     }
 
     public Message getMessageByID(int message_id) {
         return messageDAO.getMessageByID(message_id);
+    }
+
+    public List<Message> getMessagesByAccountID(int account_id) {
+        return messageDAO.getMessagesByAccountID(account_id);
     }
 }
