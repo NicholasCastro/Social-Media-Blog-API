@@ -8,8 +8,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.h2.command.Prepared;
-
 public class MessageDAO {
 
     // 3: Our API should be able to process the creation of new messages.
@@ -98,6 +96,71 @@ public class MessageDAO {
             System.out.println(e.getMessage());
         }
 
+        return null;
+    }
+
+    // 6: Our API should be able to delete a message identified by a message ID.
+    public Message deleteMessagebyMessageID(int message_id) {
+        Connection connection = ConnectionUtil.getConnection();
+
+        try {
+            String sql = "SELECT * FROM Message WHERE (message_id = ?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setInt(1, message_id);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                Message message = new Message(
+                    resultSet.getInt("message_id"),
+                    resultSet.getInt("posted_by"),
+                    resultSet.getString("message_text"),
+                    resultSet.getLong("time_posted_epoch")
+                );
+
+                String deleteSql = "DELETE FROM Message WHERE (message_id = ?)";
+                PreparedStatement deletePreparedStatement = connection.prepareStatement(deleteSql);
+                deletePreparedStatement.setInt(1, message_id);
+
+                deletePreparedStatement.executeUpdate();
+
+                return message;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    // 7: Our API should be able to update a message text identified by a message ID.
+    public Message updateMessageByMessageID (int message_id, String message_text) {
+        Connection connection = ConnectionUtil.getConnection();
+
+        Message message = this.getMessageByID(message_id);
+        Account account = null;
+        if (message != null) {
+            AccountDAO accountDAO = new AccountDAO();
+            account = accountDAO.getAccountByID(message.getPosted_by());
+        }
+        
+        if (message_text.length() > 0 && message_text.length() <= 255 && account != null) {
+            try {
+                String sql = "UPDATE Message SET message_text = ? WHERE message_id = ?";
+                PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                preparedStatement.setString(1, message_text);
+                preparedStatement.setInt(2, message_id);
+    
+                preparedStatement.executeUpdate();
+                ResultSet resultSet = preparedStatement.getGeneratedKeys();
+    
+                if (resultSet.next()) {
+                    return new Message (message_id, message.getPosted_by(), message_text, message.getTime_posted_epoch());
+                }
+    
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+        }
         return null;
     }
 

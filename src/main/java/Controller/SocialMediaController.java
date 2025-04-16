@@ -13,18 +13,15 @@ import io.javalin.http.Context;
 import java.util.List;
 
 /*
-Remaining Requirements:
-6: Our API should be able to delete a message identified by a message ID.
-7: Our API should be able to update a message text identified by a message ID.
-
-
 Completed Requirements:
 1: Our API should be able to process new User registrations
 2: Our API should be able to process User logins.
 3: Our API should be able to process the creation of new messages.
 4: Our API should be able to retrieve all messages.
 5: Our API should be able to retrieve a message by its ID.
+6: Our API should be able to delete a message identified by a message ID.
 8: Our API should be able to retrieve all messages written by a particular user.
+7: Our API should be able to update a message text identified by a message ID.
  */
 public class SocialMediaController {
     AccountService accountService;
@@ -53,6 +50,10 @@ public class SocialMediaController {
         app.get("/messages", this::getAllMessagesHandler);
         // 5: Our API should be able to retrieve a message by its ID:
         app.get("/messages/{message_id}", this::getMessageByIDHandler);
+        // 6: Our API should be able to delete a message identified by a message ID.
+        app.delete("/messages/{message_id}", this::deleteMessagebyMessageIDHandler);
+        // 7: Our API should be able to update a message text identified by a message ID.
+        app.patch("/messages/{message_id}", this::updateMessageByMessageIDHandler);
         // 8: Our API should be able to retrieve all messages written by a particular user.
         app.get("/accounts/{account_id}/messages", this::getMessagesByAccountIDHandler);
 
@@ -121,6 +122,30 @@ public class SocialMediaController {
             ctx.result();
     }
 
+    // 6: Our API should be able to delete a message identified by a message ID.
+    private void deleteMessagebyMessageIDHandler (Context ctx) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        int message_id = mapper.readValue(ctx.pathParam("message_id"), int.class);
+
+        Message message = messageService.deleteMessageByMessageID(message_id);
+        if (message != null)
+            ctx.json(message);
+        else
+            ctx.result();
+    }
+
+    // 7: Our API should be able to update a message text identified by a message ID.
+    private void updateMessageByMessageIDHandler(Context ctx) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        int message_id = mapper.readValue(ctx.pathParam("message_id"), int.class);
+        Message message_text = mapper.readValue(ctx.body(), Message.class); // Object mapper will create Message object with no parameters, then set the it's message_text based on ctx.body.
+
+        Message message = messageService.updateMessageByMessageID(message_id, message_text.getMessage_text());
+        if (message != null)
+            ctx.json(message);
+        else
+            ctx.status(400);
+    }
 
     // 8: Our API should be able to retrieve all messages written by a particular user.
     private void getMessagesByAccountIDHandler (Context ctx) throws JsonProcessingException {

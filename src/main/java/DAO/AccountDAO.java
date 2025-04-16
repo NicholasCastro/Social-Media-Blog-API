@@ -59,7 +59,7 @@ public class AccountDAO {
         return null;
     }
 
-    // Used by postMessage in MessageDAO
+    // Used by postMessage and updateMessageByMessageID in MessageDAO
     public Account getAccountByID(int account_id) {
         Connection connection = ConnectionUtil.getConnection();
 
