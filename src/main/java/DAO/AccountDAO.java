@@ -37,23 +37,21 @@ public class AccountDAO {
     public Account insertAccount(Account account) {
         Connection connection = ConnectionUtil.getConnection();    
 
-        if (account.getUsername().length() > 0 && account.getPassword().length() >= 4 && this.getAccount(account) == null){
-            try {
-                String insertSql = "INSERT INTO Account (username, password) VALUES (?, ?)";
-                PreparedStatement preparedInsertStatement = connection.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS);
-                preparedInsertStatement.setString(1, account.getUsername());
-                preparedInsertStatement.setString(2, account.getPassword());
+        try {
+            String insertSql = "INSERT INTO Account (username, password) VALUES (?, ?)";
+            PreparedStatement preparedInsertStatement = connection.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS);
+            preparedInsertStatement.setString(1, account.getUsername());
+            preparedInsertStatement.setString(2, account.getPassword());
 
-                preparedInsertStatement.executeUpdate();
-                ResultSet insertPkeyResultSet = preparedInsertStatement.getGeneratedKeys();
+            preparedInsertStatement.executeUpdate();
+            ResultSet insertPkeyResultSet = preparedInsertStatement.getGeneratedKeys();
 
-                if(insertPkeyResultSet.next()){
-                    int generated_account_id = (int) insertPkeyResultSet.getLong(1);
-                    return new Account(generated_account_id, account.getUsername(), account.getPassword());
-                }
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
+            if(insertPkeyResultSet.next()){
+                int generated_account_id = (int) insertPkeyResultSet.getLong(1);
+                return new Account(generated_account_id, account.getUsername(), account.getPassword());
             }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
             
         return null;

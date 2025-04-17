@@ -1,7 +1,6 @@
 package DAO;
 
 import Model.Message;
-import Model.Account;
 import Util.ConnectionUtil;
 
 import java.sql.*;
@@ -13,33 +12,27 @@ public class MessageDAO {
     // 3: Our API should be able to process the creation of new messages.
     public Message postMessage(Message message) {
         Connection connection = ConnectionUtil.getConnection();
-
-        AccountDAO accountDAO = new AccountDAO();
-        Account account = accountDAO.getAccountByID(message.getPosted_by());
-
-        if (message.getMessage_text().length() <= 255 && message.getMessage_text().length() > 0 && account != null) {
-            try {
-                String sql = "INSERT INTO Message (posted_by, message_text, time_posted_epoch) VALUES (?, ?, ?)";
-                PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-                preparedStatement.setInt(1, message.getPosted_by());
-                preparedStatement.setString(2, message.getMessage_text());
-                preparedStatement.setLong(3, message.getTime_posted_epoch());
-
-                preparedStatement.executeUpdate();
-                ResultSet resultSet = preparedStatement.getGeneratedKeys();
-
-                if(resultSet.next()) {
-                    int result_message_id = resultSet.getInt(1);
-
-                    return new Message (result_message_id, message.getPosted_by(), message.getMessage_text(), message.getTime_posted_epoch());
-                }
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-
-        return null;
         
+        try {
+            String sql = "INSERT INTO Message (posted_by, message_text, time_posted_epoch) VALUES (?, ?, ?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setInt(1, message.getPosted_by());
+            preparedStatement.setString(2, message.getMessage_text());
+            preparedStatement.setLong(3, message.getTime_posted_epoch());
+
+            preparedStatement.executeUpdate();
+            ResultSet resultSet = preparedStatement.getGeneratedKeys();
+
+            if(resultSet.next()) {
+                int result_message_id = resultSet.getInt(1);
+
+                return new Message (result_message_id, message.getPosted_by(), message.getMessage_text(), message.getTime_posted_epoch());
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
+        return null;
     }
 
     // 4: Our API should be able to retrieve all messages.
@@ -135,32 +128,26 @@ public class MessageDAO {
     // 7: Our API should be able to update a message text identified by a message ID.
     public Message updateMessageByMessageID (int message_id, String message_text) {
         Connection connection = ConnectionUtil.getConnection();
-
-        Message message = this.getMessageByID(message_id);
-        Account account = null;
-        if (message != null) {
-            AccountDAO accountDAO = new AccountDAO();
-            account = accountDAO.getAccountByID(message.getPosted_by());
-        }
         
-        if (message_text.length() > 0 && message_text.length() <= 255 && account != null) {
-            try {
-                String sql = "UPDATE Message SET message_text = ? WHERE message_id = ?";
-                PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-                preparedStatement.setString(1, message_text);
-                preparedStatement.setInt(2, message_id);
-    
-                preparedStatement.executeUpdate();
-                ResultSet resultSet = preparedStatement.getGeneratedKeys();
-    
-                if (resultSet.next()) {
-                    return new Message (message_id, message.getPosted_by(), message_text, message.getTime_posted_epoch());
-                }
-    
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
+        try {
+            String sql = "UPDATE Message SET message_text = ? WHERE message_id = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, message_text);
+            preparedStatement.setInt(2, message_id);
+
+            preparedStatement.executeUpdate();
+            ResultSet resultSet = preparedStatement.getGeneratedKeys();
+
+            if (resultSet.next()) {
+                int result_message_id = resultSet.getInt(1);
+
+                return this.getMessageByID(result_message_id);
             }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
+
         return null;
     }
 
